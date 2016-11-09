@@ -13,7 +13,7 @@ def test_third_order_convergence_on_uniform_mesh():
     for i in range(6):
         convergence.converge()
 
-    assert convergence.order() > 1.9 and convergence.order() < 2.1
+    assert convergence.order() > 2.9 and convergence.order() < 3.1
 #    assert convergence.order() == pytest.approx(2, 0.1)
 
 

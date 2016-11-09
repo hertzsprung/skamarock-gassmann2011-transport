@@ -28,25 +28,28 @@ class SimulationSpec:
     def _advect(self, simulation, dt):
         T_old = simulation.T_latest()
 
-        T_star = self._runge_kutta_stage(dt, T_old, T_old)
-        T_star_star = self._runge_kutta_stage(dt, T_old, T_star)
+        T_star = self._runge_kutta_stage(dt/3, T_old, T_old)
+        T_star_star = self._runge_kutta_stage(dt/2, T_old, T_star)
         T = self._runge_kutta_stage(dt, T_old, T_star_star)
 
         return T
 
-    def _runge_kutta_stage(self, dt, T_old, T_fractional):
+    def _runge_kutta_stage(self, dt_fractional, T_old, T_fractional):
         T = np.zeros_like(T_old)
 
         for i in range(T.size):
-            T[i] = T_old[i] + 0.5*dt*(self._flux_divergence(T_old, i) + self._flux_divergence(T_fractional, i))
+            T[i] = T_old[i] + dt_fractional*self._flux_divergence(T_fractional, i)
 
         return T
 
     def _flux_divergence(self, T, i):
-        T_right = 0.5*(T[i] + T[(i+1) % T.size])
-        T_left = 0.5*(T[(i-1) % T.size] + T[i])
+        T_right = 0.5*(T[i] + T[(i+1) % T.size]) - 1/6 * self._second_derivative(T, i)
+        T_left = 0.5*(T[(i-1) % T.size] + T[i]) - 1/6 * self._second_derivative(T, i-1)
 
         return -self._u * (T_right - T_left) / self.dx[i]
+
+    def _second_derivative(self, T, i):
+        return T[(i+1)%T.size] - 2*T[i] + T[(i-1)%T.size]
 
     def mean_dx(self):
         return np.mean(self.dx)
