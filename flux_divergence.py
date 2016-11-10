@@ -1,6 +1,13 @@
 import numpy as np
 import numpy.linalg as la
 
+class Centred:
+    def __call__(self, mesh, u, T, i):
+        T_right = 0.5*(T[i] + T[(i+1) % T.size])
+        T_left = 0.5*(T[(i-1) % T.size] + T[i])
+
+        return -u * (T_right - T_left) / mesh.dx[i]
+
 class SkamarockGassmann:
     def __call__(self, mesh, u, T, i):
         T_right = 0.5*(T[i] + T[(i+1) % T.size]) - 1/6 * self._second_derivative(T, i)

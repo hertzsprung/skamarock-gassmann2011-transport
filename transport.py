@@ -10,6 +10,9 @@ class InitialConditions:
     def sine_wave(k=1):
         return lambda x: math.sin(2*math.pi*k*x)
 
+    def quadratic():
+        return lambda x: (x-0.5)**2
+
 class Mesh:
     @staticmethod
     def uniform(nx = 10):
@@ -93,10 +96,10 @@ class SimulationSpec:
         return T
 
     def refine(self):
-        return SimulationSpec(self._initial, self._dt/2, self.mesh.refine())
+        return SimulationSpec(self._initial, self._dt/2, self.mesh.refine(), self._flux_divergence)
 
     def max_courant(self):
-        return np.max(self._u * self._dt / self.mesh.dx)
+        return self._u * self._dt / np.min(self.mesh.dx)
 
 class Simulation:
     def __init__(self, spec):
