@@ -156,3 +156,8 @@ class Convergence:
         A = np.vstack([log_dxs, np.ones(len(log_dxs))]).T
         m, c = np.linalg.lstsq(A, log_errors)[0]
         return m
+
+    def dump(self, filename):
+        with open(filename, 'w') as f: 
+            for mean_dx, l2, linf in zip(self._dxs, self.errors_l2, self.errors_linf):
+                print(mean_dx, l2, linf, file=f)

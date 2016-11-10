@@ -16,6 +16,7 @@ def test_third_order_convergence_on_uniform_mesh():
 
     assert convergence.order(convergence.errors_l2) == pytest.approx(3, 0.1)
     assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
+    convergence.dump("results/uniform.dat")
 
 def test_first_order_convergence_on_nonuniform_mesh():
     convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform())))
@@ -25,3 +26,4 @@ def test_first_order_convergence_on_nonuniform_mesh():
 
     assert convergence.order(convergence.errors_l2) == pytest.approx(2, 0.1)
     assert convergence.order(convergence.errors_linf) < 1.9
+    convergence.dump("results/nonuniform.dat")
