@@ -3,11 +3,12 @@ import numpy as np
 import os
 import itertools
 import random
+import flux_divergence
 
 class InitialConditions:
     @staticmethod
-    def sine_wave():
-        return lambda x: math.sin(2*math.pi*x)
+    def sine_wave(k=1):
+        return lambda x: math.sin(2*math.pi*k*x)
 
 class Mesh:
     @staticmethod
@@ -31,6 +32,9 @@ class Mesh:
         self.Cf += [width]
         self.dx = [r - l for l,r in zip(self.Cf[:-1], self.Cf[1:])]
 
+    def mean_dx(self):
+        return np.mean(self.dx)
+
     def refine(self):
         refined_Cf = list(self.roundrobin(self.Cf, self.C))
         refined_C = [0.5*(f0+f1) for f0, f1 in zip(refined_Cf[:-1], refined_Cf[1:])]
@@ -51,10 +55,11 @@ class Mesh:
                 nexts = itertools.cycle(itertools.islice(nexts, pending))
 
 class SimulationSpec:
-    def __init__(self, initial = InitialConditions.sine_wave(), dt = 0.05, mesh = Mesh()):
+    def __init__(self, initial = InitialConditions.sine_wave(), dt = 0.05, mesh = Mesh(), flux_divergence=flux_divergence.SkamarockGassmann()):
         self._initial = initial
         self.mesh = mesh
         self._dt = dt
+        self._flux_divergence = flux_divergence
 
         self._width = 1.0
         self._end_time = 1.0
@@ -83,21 +88,9 @@ class SimulationSpec:
         T = np.zeros_like(T_old)
 
         for i in range(T.size):
-            T[i] = T_old[i] + dt_fractional*self._flux_divergence(T_fractional, i)
+            T[i] = T_old[i] + dt_fractional*self._flux_divergence(self.mesh, self._u, T_fractional, i)
 
         return T
-
-    def _flux_divergence(self, T, i):
-        T_right = 0.5*(T[i] + T[(i+1) % T.size]) - 1/6 * self._second_derivative(T, i)
-        T_left = 0.5*(T[(i-1) % T.size] + T[i]) - 1/6 * self._second_derivative(T, i-1)
-
-        return -self._u * (T_right - T_left) / self.mesh.dx[i]
-
-    def _second_derivative(self, T, i):
-        return T[(i+1)%T.size] - 2*T[i] + T[(i-1)%T.size]
-
-    def mean_dx(self):
-        return np.mean(self.mesh.dx)
 
     def refine(self):
         return SimulationSpec(self._initial, self._dt/2, self.mesh.refine())
@@ -140,7 +133,7 @@ class Convergence:
 
     def converge(self):
         simulation = self._spec.advect()
-        self._dxs.append(self._spec.mean_dx())
+        self._dxs.append(self._spec.mesh.mean_dx())
         self.errors_l2.append(simulation.error_l2())
         self.errors_linf.append(simulation.error_linf())
         self._spec = self._spec.refine()
