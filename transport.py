@@ -4,6 +4,7 @@ import os
 import itertools
 import random
 import flux_divergence
+import timestepping
 
 class InitialConditions:
     @staticmethod
@@ -16,7 +17,7 @@ class InitialConditions:
 class Mesh:
     @staticmethod
     def uniform(nx = 10):
-        return lambda width: np.linspace(0.5*width/nx, 1-0.5*width/nx, num=nx)
+        return lambda width: np.linspace(0.0, 1.0, num=nx+1)
 
     @staticmethod
     def nonuniform(nx = 10, nonuniformity=0.5):
@@ -25,14 +26,13 @@ class Mesh:
     @staticmethod
     def _nonuniform(width, nx, nonuniformity, seed=0):
         random.seed(seed)
-        return [C + random.uniform(-1,1)*nonuniformity*width/nx for C in Mesh.uniform(nx)(width)]
+        internal_faces = [Cf + random.uniform(-1,1)*nonuniformity*width/nx for Cf in Mesh.uniform(nx)(width)[1:-1]]
+        return list(itertools.chain([0.0], internal_faces, [width]))
 
-    def __init__(self, C = uniform.__func__(), width = 1.0):
+    def __init__(self, Cf = uniform.__func__(), width = 1.0):
         self.width = width
-        self.C = np.array(C(width))
-        self.Cf = [0]
-        self.Cf += [0.5*(l + r) for l, r in zip(self.C[:-1], self.C[1:])]
-        self.Cf += [width]
+        self.Cf = np.array(Cf(width))
+        self.C = np.array([0.5*(l + r) for l,r in zip(self.Cf[:-1], self.Cf[1:])])
         self.dx = [r - l for l,r in zip(self.Cf[:-1], self.Cf[1:])]
 
     def mean_dx(self):
@@ -40,9 +40,8 @@ class Mesh:
 
     def refine(self):
         refined_Cf = list(self.roundrobin(self.Cf, self.C))
-        refined_C = [0.5*(f0+f1) for f0, f1 in zip(refined_Cf[:-1], refined_Cf[1:])]
 
-        return Mesh(C = lambda width: refined_C, width = self.width)
+        return Mesh(Cf = lambda width: refined_Cf, width = self.width)
 
     def roundrobin(self, *iterables):
         "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
@@ -58,45 +57,29 @@ class Mesh:
                 nexts = itertools.cycle(itertools.islice(nexts, pending))
 
 class SimulationSpec:
-    def __init__(self, initial = InitialConditions.sine_wave(), dt = 0.05, mesh = Mesh(), flux_divergence=flux_divergence.SkamarockGassmann):
+    def __init__(self, initial = InitialConditions.sine_wave(), dt = 0.025, end_time = 1.0, mesh = Mesh(), flux_divergence=flux_divergence.SkamarockGassmann, timestepping = timestepping.RungeKutta3):
         self._initial = initial
         self.mesh = mesh
         self._dt = dt
         self._flux_divergence = flux_divergence(mesh)
+        self._timestepping = timestepping(self._flux_divergence)
 
         self._width = 1.0
-        self._end_time = 1.0
-        self._u = 1
-        self.times = np.arange(0, self._end_time+np.finfo(float).eps, step=self._dt)
+        self._end_time = end_time
+        self._u = 1.0
+        self.times = np.arange(0.0, self._end_time+np.finfo(float).eps, step=self._dt)
         self.T = np.array(np.array([initial(C) for C in mesh.C]))
 
     def advect(self):
         simulation = Simulation(self)
 
         for t_old, t in zip(self.times[:-1], self.times[1:]):
-            simulation.append(self._advect(simulation, t - t_old))
+            simulation.append(self._timestepping(simulation.T_latest(), t - t_old, self._u))
 
         return simulation
 
-    def _advect(self, simulation, dt):
-        T_old = simulation.T_latest()
-
-        T_star = self._runge_kutta_stage(dt/3, T_old, T_old)
-        T_star_star = self._runge_kutta_stage(dt/2, T_old, T_star)
-        T = self._runge_kutta_stage(dt, T_old, T_star_star)
-
-        return T
-
-    def _runge_kutta_stage(self, dt_fractional, T_old, T_fractional):
-        T = np.zeros_like(T_old)
-
-        for i in range(T.size):
-            T[i] = T_old[i] + dt_fractional*self._flux_divergence(self._u, T_fractional, i)
-
-        return T
-
     def refine(self):
-        return SimulationSpec(self._initial, self._dt/2, self.mesh.refine(), self._flux_divergence.__class__)
+        return SimulationSpec(self._initial, self._dt/2, self._end_time, self.mesh.refine(), self._flux_divergence.__class__, self._timestepping.__class__)
 
     def max_courant(self):
         return self._u * self._dt / np.min(self.mesh.dx)
@@ -120,6 +103,9 @@ class Simulation:
 
     def error_linf(self):
         return np.max(np.absolute(self.T_latest() - self.T_initial())) / np.max(np.absolute(self.T_initial()))
+
+    def mass_change(self):
+        return np.sum(self._spec.mesh.dx * self.T_latest()) - np.sum(self._spec.mesh.dx*self.T_initial())
 
     def dump(self, directory):
         for i, T in enumerate(self.T):

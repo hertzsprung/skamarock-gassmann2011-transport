@@ -1,14 +1,25 @@
 import numpy as np
 import numpy.linalg as la
 
+class Upwind:
+    def __init__(self, mesh):
+        self._mesh = mesh
+
+    def __call__(self, u, T, i):
+        T_left = T[(i-1) % T.size]
+        T_right = T[i % T.size]
+
+        return -u * (T_right - T_left) / self._mesh.dx[i % T.size]
+
 class Centred:
     def __init__(self, mesh):
         self._mesh = mesh
 
     def __call__(self, u, T, i):
+        # FIXME: this should account for nonuniform mesh geometries
         T_right = 0.5*(T[i] + T[(i+1) % T.size])
         T_left = 0.5*(T[(i-1) % T.size] + T[i])
-
+        
         return -u * (T_right - T_left) / self._mesh.dx[i]
 
 class SkamarockGassmann:
