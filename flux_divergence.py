@@ -16,11 +16,25 @@ class Centred:
         self._mesh = mesh
 
     def __call__(self, u, T, i):
-        # FIXME: this should account for nonuniform mesh geometries
-        T_right = 0.5*(T[i] + T[(i+1) % T.size])
-        T_left = 0.5*(T[(i-1) % T.size] + T[i])
+        T_right = self._approximate(T, i)
+        T_left = self._approximate(T, i+1)
         
         return -u * (T_right - T_left) / self._mesh.dx[i]
+
+    def _approximate(self, T, i):
+        Cf = self._mesh.Cf[i]
+
+        C_left = self._mesh.C[(i-1) % T.size]
+        if C_left > Cf:
+            C_left -= self._mesh.width
+
+        C_right = self._mesh.C[i % T.size]
+        if C_right < Cf:
+            C_right += self._mesh.width
+
+        left_weight = (C_right - Cf)/(C_right - C_left)
+
+        return left_weight * T[(i-1) % T.size] + (1 - left_weight) * T[i % T.size]
 
 class SkamarockGassmann:
     def __init__(self, mesh):

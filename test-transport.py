@@ -56,8 +56,8 @@ def test_second_order_convergence_on_nonuniform_mesh_with_cubic_fit():
 def test_second_order_convergence_on_uniform_mesh_with_centred():
     check_convergence(Mesh.uniform(), Centred, l2_error=2, linf_error=2, dump_file="results/centred-uniform.dat")
 
-def test_first_order_convergence_on_nonuniform_mesh_with_centred():
-    check_convergence(Mesh.nonuniform(), Centred, l2_error=1, linf_error=1, dump_file="results/centred-nonuniform.dat")
+def test_second_order_convergence_on_nonuniform_mesh_with_centred():
+    check_convergence(Mesh.nonuniform(), Centred, l2_error=2, linf_error=2, dump_file="results/centred-nonuniform.dat")
 
 def test_skamarock_gassmann_is_conservative():
     check_conservation(SkamarockGassmann)
