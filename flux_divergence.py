@@ -47,6 +47,15 @@ class LeastSquaresDerivative:
             B.append([1, C, C**2, C**3])
 
         Binv = la.pinv(B)
+        w_advective = Binv[1]
+        a = -w_advective[0]
+        c = w_advective[3]
+        b = a - w_advective[1]
+        w_flux = [a, b, c]
+        # it seems that I can decompose w_advective into left and right coefficients
+        # but for conservation I need to ensure that the right flux of the left cell matches
+        # the left flux of the right-hand neighbour
+
         first_derivative = np.dot(Binv[1], stencil_T)
         return -u * first_derivative
 
