@@ -30,7 +30,10 @@ def test_sine_wave_advection_with_skamarock_gassmann():
     check_l2_error_below(0.35, Mesh.nonuniform(), SkamarockGassmann)
 
 def test_sine_wave_advection_with_least_squares():
-    check_l2_error_below(0.2, Mesh.uniform(), LeastSquaresDerivative)
+    check_l2_error_below(0.2, Mesh.nonuniform(), LeastSquaresDerivative)
+
+def test_sine_wave_advection_with_skamarock_gassmann_nonuniform_centring():
+    check_l2_error_below(0.25, Mesh.nonuniform(), SkamarockGassmannNonUniformCentring)
 
 def test_sine_wave_advection_with_cubic_fit():
     check_l2_error_below(0.2, Mesh.nonuniform(), CubicFit)
@@ -40,6 +43,12 @@ def test_third_order_convergence_on_uniform_mesh_with_skamarock_gassmann():
 
 def test_less_than_second_order_convergence_on_nonuniform_mesh_with_skamarock_gassmann():
     check_convergence(Mesh.nonuniform(), SkamarockGassmann, l2_error=2, linf_error=1.5, dump_file="results/sk-nonuniform.dat")
+
+def test_third_order_convergence_on_uniform_mesh_with_skamarock_gassmann_nonuniform_centring():
+    check_convergence(Mesh.uniform(), SkamarockGassmannNonUniformCentring, l2_error=3, linf_error=3, dump_file="results/sknuc-uniform.dat")
+
+def test_less_than_second_order_convergence_on_nonuniform_mesh_with_skamarock_gassmann_nonuniform_centring():
+    check_convergence(Mesh.nonuniform(), SkamarockGassmannNonUniformCentring, l2_error=2, linf_error=1.5, dump_file="results/sknuc-nonuniform.dat")
 
 def test_third_order_convergence_on_uniform_mesh_with_least_squares():
     check_convergence(Mesh.uniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="results/ls-uniform.dat")
