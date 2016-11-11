@@ -6,6 +6,7 @@ from timestepping import *
 def check_l2_error_below(threshold, mesh_type, flux_divergence):
     spec = SimulationSpec(mesh = Mesh(mesh_type), flux_divergence = flux_divergence)
     simulation = spec.advect()
+    simulation.dump("results")
     assert simulation.error_l2() < threshold
 
 def check_convergence(mesh_type, flux_divergence, l2_error, linf_error, dump_file = None):
@@ -23,14 +24,13 @@ def check_convergence(mesh_type, flux_divergence, l2_error, linf_error, dump_fil
 def check_conservation(flux_divergence):
     spec = SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence = flux_divergence)
     simulation = spec.advect()
-    simulation.dump("results")
     assert simulation.mass_change() == pytest.approx(0)
 
 def test_sine_wave_advection_with_skamarock_gassmann():
     check_l2_error_below(0.35, Mesh.nonuniform(), SkamarockGassmann)
 
 def test_sine_wave_advection_with_least_squares():
-    check_l2_error_below(0.2, Mesh.nonuniform(), LeastSquaresDerivative)
+    check_l2_error_below(0.2, Mesh.uniform(), LeastSquaresDerivative)
 
 def test_sine_wave_advection_with_cubic_fit():
     check_l2_error_below(0.2, Mesh.nonuniform(), CubicFit)

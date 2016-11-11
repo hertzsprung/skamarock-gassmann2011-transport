@@ -55,7 +55,9 @@ class LeastSquaresDerivative:
     def __init__(self, mesh):
         self._mesh = mesh
         self._advective_coeffs = []
-#        self._flux_coeffs = []
+        self._flux_coeffs = []
+
+        max_flux_coeff_error = 0
 
         for i in range(mesh.C.size):
             origin = self._mesh.C[i]
@@ -83,25 +85,34 @@ class LeastSquaresDerivative:
 
             Binv = la.pinv(B)
             w_advective = Binv[1]
-#            a = -w_advective[0]
-#            c = w_advective[3]
-#            b = a - w_advective[1]
-#            w_flux = [a, b, c]
-#            assert abs(b - c - w_advective[2]) < 1e-10
 
+            a = -w_advective[0]
+            c = w_advective[3]
+            b = a - w_advective[1]
+            w_flux = np.multiply(self._mesh.dx[i], [a, b, c])
+
+            max_flux_coeff_error = max(abs(b - c - w_advective[2]), max_flux_coeff_error)
+    
             self._advective_coeffs.append(w_advective)
+            self._flux_coeffs.append(w_flux)
+
+        assert max_flux_coeff_error < 1e-12
+        print("max_flux_coeff_error", max_flux_coeff_error)
 
     def __call__(self, u, T, i):
-        origin = self._mesh.C[i]
+        T_left = self._approximate(T, i, self._flux_coeffs[i])
+        T_right = self._approximate(T, i+1, self._flux_coeffs[i])
 
-        downwind_i = (i+1) % T.size
+        return -u * (T_right - T_left) / self._mesh.dx[i]
+
+    def _approximate(self, T, i, coeffs):
+        downwind_i = i % T.size
         upwind_i = (i-1) % T.size
         upupwind_i = (i-2) % T.size
 
-        stencil_T = [T[upupwind_i], T[upwind_i], T[i], T[downwind_i]]
+        stencil_T = [T[upupwind_i], T[upwind_i], T[downwind_i]]
 
-        first_derivative = np.dot(self._advective_coeffs[i], stencil_T)
-        return -u * first_derivative
+        return np.dot(coeffs, stencil_T)
 
 class CubicFit:
     def __init__(self, mesh):
@@ -142,8 +153,8 @@ class CubicFit:
             self._Cf_coefficients.append(Binv[0]*m[0])
 
     def __call__(self, u, T, i):
-        T_right = self._approximate(T, i+1)
         T_left = self._approximate(T, i)
+        T_right = self._approximate(T, i+1)
         return -u * (T_right - T_left) / self._mesh.dx[i]
 
     def _approximate(self, T, i):
