@@ -29,43 +29,53 @@ class SkamarockGassmann:
 class LeastSquaresDerivative:
     def __init__(self, mesh):
         self._mesh = mesh
+        self._advective_coeffs = []
+#        self._flux_coeffs = []
+
+        for i in range(mesh.C.size):
+            origin = self._mesh.C[i]
+
+            downwind_i = (i+1) % mesh.C.size
+            downwind_C = self._mesh.C[downwind_i]
+            if downwind_C < origin:
+                downwind_C += self._mesh.width
+
+            upwind_i = (i-1) % mesh.C.size
+            upwind_C = self._mesh.C[upwind_i]
+            if upwind_C > origin:
+                upwind_C -= self._mesh.width
+
+            upupwind_i = (i-2) % mesh.C.size
+            upupwind_C = self._mesh.C[upupwind_i]
+            if upupwind_C > origin:
+                upupwind_C -= self._mesh.width
+
+            stencil_C = np.array([upupwind_C, upwind_C, origin, downwind_C]) - origin
+
+            B = []
+            for C in stencil_C:
+                B.append([1, C, C**2, C**3])
+
+            Binv = la.pinv(B)
+            w_advective = Binv[1]
+#            a = -w_advective[0]
+#            c = w_advective[3]
+#            b = a - w_advective[1]
+#            w_flux = [a, b, c]
+#            assert abs(b - c - w_advective[2]) < 1e-10
+
+            self._advective_coeffs.append(w_advective)
 
     def __call__(self, u, T, i):
         origin = self._mesh.C[i]
 
         downwind_i = (i+1) % T.size
-        downwind_C = self._mesh.C[downwind_i]
-        if downwind_C < origin:
-            downwind_C += self._mesh.width
-
         upwind_i = (i-1) % T.size
-        upwind_C = self._mesh.C[upwind_i]
-        if upwind_C > origin:
-            upwind_C -= self._mesh.width
-
         upupwind_i = (i-2) % T.size
-        upupwind_C = self._mesh.C[upupwind_i]
-        if upupwind_C > origin:
-            upupwind_C -= self._mesh.width
 
-        stencil_C = np.array([upupwind_C, upwind_C, origin, downwind_C]) - origin
         stencil_T = [T[upupwind_i], T[upwind_i], T[i], T[downwind_i]]
 
-        B = []
-        for C in stencil_C:
-            B.append([1, C, C**2, C**3])
-
-        Binv = la.pinv(B)
-        w_advective = Binv[1]
-        a = -w_advective[0]
-        c = w_advective[3]
-        b = a - w_advective[1]
-        w_flux = [a, b, c]
-        # it seems that I can decompose w_advective into left and right coefficients
-        # but for conservation I need to ensure that the right flux of the left cell matches
-        # the left flux of the right-hand neighbour
-
-        first_derivative = np.dot(Binv[1], stencil_T)
+        first_derivative = np.dot(self._advective_coeffs[i], stencil_T)
         return -u * first_derivative
 
 class CubicFit:
