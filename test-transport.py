@@ -9,13 +9,13 @@ def test_sine_wave_advection_with_skamarock_gassmann():
     assert simulation.error_l2() < 0.25
 
 def test_sine_wave_advection_with_least_squares():
-    spec = SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=LeastSquaresDerivative())
+    spec = SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=LeastSquaresDerivative)
     simulation = spec.advect()
     simulation.dump("results")
     assert simulation.error_l2() < 0.2
 
 def test_sine_wave_advection_with_cubic_fit():
-    spec = SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=CubicFit())
+    spec = SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=CubicFit)
     simulation = spec.advect()
     simulation.dump("results")
     assert simulation.error_l2() < 0.2
@@ -41,7 +41,7 @@ def test_first_order_convergence_on_nonuniform_mesh_with_skamarock_gassmann():
     assert convergence.order(convergence.errors_linf) < 1.9
 
 def test_third_order_convergence_on_uniform_mesh_with_least_squares():
-    convergence = Convergence(SimulationSpec(flux_divergence=LeastSquaresDerivative()))
+    convergence = Convergence(SimulationSpec(flux_divergence=LeastSquaresDerivative))
 
     for i in range(6):
         convergence.converge()
@@ -51,7 +51,7 @@ def test_third_order_convergence_on_uniform_mesh_with_least_squares():
     assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
 
 def test_first_order_convergence_on_nonuniform_mesh_with_least_squares():
-    convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=LeastSquaresDerivative()))
+    convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=LeastSquaresDerivative))
 
     for i in range(6):
         convergence.converge()
@@ -61,7 +61,7 @@ def test_first_order_convergence_on_nonuniform_mesh_with_least_squares():
     assert convergence.order(convergence.errors_linf) < 1.9
 
 def test_third_order_convergence_on_uniform_mesh_with_cubic_fit():
-    convergence = Convergence(SimulationSpec(flux_divergence=CubicFit()))
+    convergence = Convergence(SimulationSpec(flux_divergence=CubicFit))
 
     for i in range(6):
         convergence.converge()
@@ -71,7 +71,7 @@ def test_third_order_convergence_on_uniform_mesh_with_cubic_fit():
     assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
 
 def test_first_order_convergence_on_nonuniform_mesh_with_cubic_fit():
-    convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=CubicFit()))
+    convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=CubicFit))
 
     for i in range(6):
         convergence.converge()
@@ -81,7 +81,7 @@ def test_first_order_convergence_on_nonuniform_mesh_with_cubic_fit():
     assert convergence.order(convergence.errors_linf) < 1.9
 
 def test_third_order_convergence_on_uniform_mesh_with_centred():
-    convergence = Convergence(SimulationSpec(flux_divergence=Centred()))
+    convergence = Convergence(SimulationSpec(flux_divergence=Centred))
 
     for i in range(6):
         convergence.converge()
@@ -91,7 +91,7 @@ def test_third_order_convergence_on_uniform_mesh_with_centred():
     assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
 
 def test_first_order_convergence_on_nonuniform_mesh_with_centred():
-    convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=Centred()))
+    convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=Centred))
 
     for i in range(6):
         convergence.converge()

@@ -58,11 +58,11 @@ class Mesh:
                 nexts = itertools.cycle(itertools.islice(nexts, pending))
 
 class SimulationSpec:
-    def __init__(self, initial = InitialConditions.sine_wave(), dt = 0.05, mesh = Mesh(), flux_divergence=flux_divergence.SkamarockGassmann()):
+    def __init__(self, initial = InitialConditions.sine_wave(), dt = 0.05, mesh = Mesh(), flux_divergence=flux_divergence.SkamarockGassmann):
         self._initial = initial
         self.mesh = mesh
         self._dt = dt
-        self._flux_divergence = flux_divergence
+        self._flux_divergence = flux_divergence(mesh)
 
         self._width = 1.0
         self._end_time = 1.0
@@ -91,12 +91,12 @@ class SimulationSpec:
         T = np.zeros_like(T_old)
 
         for i in range(T.size):
-            T[i] = T_old[i] + dt_fractional*self._flux_divergence(self.mesh, self._u, T_fractional, i)
+            T[i] = T_old[i] + dt_fractional*self._flux_divergence(self._u, T_fractional, i)
 
         return T
 
     def refine(self):
-        return SimulationSpec(self._initial, self._dt/2, self.mesh.refine(), self._flux_divergence)
+        return SimulationSpec(self._initial, self._dt/2, self.mesh.refine(), self._flux_divergence.__class__)
 
     def max_courant(self):
         return self._u * self._dt / np.min(self.mesh.dx)
