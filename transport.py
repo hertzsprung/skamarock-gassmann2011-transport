@@ -29,7 +29,7 @@ class Mesh:
 
     def __init__(self, C = uniform.__func__(), width = 1.0):
         self.width = width
-        self.C = C(width)
+        self.C = np.array(C(width))
         self.Cf = [0]
         self.Cf += [0.5*(l + r) for l, r in zip(self.C[:-1], self.C[1:])]
         self.Cf += [width]

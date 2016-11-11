@@ -71,42 +71,52 @@ class LeastSquaresDerivative:
 class CubicFit:
     def __init__(self, mesh):
         self._mesh = mesh
+        self._Cf_coefficients = []
+
+        for i in range(mesh.C.size):
+            origin = mesh.Cf[i]
+
+            downwind_i = i
+            downwind_C = mesh.C[downwind_i]
+            if downwind_C < origin:
+                downwind_C += mesh.width
+
+            upwind_i = (i-1) % mesh.C.size
+            upwind_C = mesh.C[upwind_i]
+            if upwind_C > origin:
+                upwind_C -= mesh.width
+
+            upupwind_i = (i-2) % mesh.C.size
+            upupwind_C = mesh.C[upupwind_i]
+            if upupwind_C > origin:
+                upupwind_C -= mesh.width
+
+            upupupwind_i = (i-3) % mesh.C.size
+            upupupwind_C = mesh.C[upupupwind_i]
+            if upupupwind_C > origin:
+                upupupwind_C -= mesh.width
+
+            stencil_C = (np.array([upupupwind_C, upupwind_C, upwind_C, downwind_C]) - origin)/mesh.mean_dx()
+
+            B = []
+            m = [1, 1, 1, 1]
+            for i, C in enumerate(stencil_C):
+                B.append(np.multiply(m[i], [1, C, C**2, C**3]))
+
+            Binv = la.pinv(B)
+            self._Cf_coefficients.append(Binv[0]*m[0])
 
     def __call__(self, u, T, i):
-        T_right = self._approximate(T, i)
-        T_left = self._approximate(T, i-1)
+        T_right = self._approximate(T, i+1)
+        T_left = self._approximate(T, i)
         return -u * (T_right - T_left) / self._mesh.dx[i]
 
     def _approximate(self, T, i):
-        origin = self._mesh.Cf[i+1]
+        downwind_i = i % T.size
+        upwind_i = (i-1) % T.size
+        upupwind_i = (i-2) % T.size
+        upupupwind_i = (i-3) % T.size
 
-        downwind_i = (i+1) % T.size
-        downwind_C = self._mesh.C[downwind_i]
-        if downwind_C < origin:
-            downwind_C += self._mesh.width
-
-        upwind_i = i
-        upwind_C = self._mesh.C[upwind_i]
-        if upwind_C > origin:
-            upwind_C -= self._mesh.width
-
-        upupwind_i = (i-1) % T.size
-        upupwind_C = self._mesh.C[upupwind_i]
-        if upupwind_C > origin:
-            upupwind_C -= self._mesh.width
-
-        upupupwind_i = (i-2) % T.size
-        upupupwind_C = self._mesh.C[upupupwind_i]
-        if upupupwind_C > origin:
-            upupupwind_C -= self._mesh.width
-
-        stencil_C = (np.array([upupupwind_C, upupwind_C, upwind_C, downwind_C]) - origin)/self._mesh.mean_dx()
         stencil_T = [T[upupupwind_i], T[upupwind_i], T[upwind_i], T[downwind_i]]
 
-        B = []
-        m = [1, 1, 1, 1]
-        for i, C in enumerate(stencil_C):
-            B.append(np.multiply(m[i], [1, C, C**2, C**3]))
-
-        Binv = la.pinv(B)
-        return np.dot(Binv[0]*m[0], stencil_T)
+        return np.dot(self._Cf_coefficients[i % T.size], stencil_T)

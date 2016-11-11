@@ -50,27 +50,27 @@ def test_third_order_convergence_on_uniform_mesh_with_least_squares():
     assert convergence.order(convergence.errors_l2) == pytest.approx(3, 0.1)
     assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
 
-def test_first_order_convergence_on_nonuniform_mesh_with_least_squares():
+def test_third_order_convergence_on_nonuniform_mesh_with_least_squares():
     convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=LeastSquaresDerivative))
 
     for i in range(6):
         convergence.converge()
 
     convergence.dump("results/ls-nonuniform.dat")
-    assert convergence.order(convergence.errors_l2) == pytest.approx(2, 0.2)
-    assert convergence.order(convergence.errors_linf) < 1.9
+    assert convergence.order(convergence.errors_l2) == pytest.approx(3, 0.2)
+    assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.2)
 
-def test_third_order_convergence_on_uniform_mesh_with_cubic_fit():
+def test_second_order_convergence_on_uniform_mesh_with_cubic_fit():
     convergence = Convergence(SimulationSpec(flux_divergence=CubicFit))
 
     for i in range(6):
         convergence.converge()
 
     convergence.dump("results/cf-uniform.dat")
-    assert convergence.order(convergence.errors_l2) == pytest.approx(3, 0.1)
-    assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
+    assert convergence.order(convergence.errors_l2) == pytest.approx(2, 0.1)
+    assert convergence.order(convergence.errors_linf) == pytest.approx(2, 0.1)
 
-def test_first_order_convergence_on_nonuniform_mesh_with_cubic_fit():
+def test_second_order_convergence_on_nonuniform_mesh_with_cubic_fit():
     convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=CubicFit))
 
     for i in range(6):
@@ -78,17 +78,17 @@ def test_first_order_convergence_on_nonuniform_mesh_with_cubic_fit():
 
     convergence.dump("results/cf-nonuniform.dat")
     assert convergence.order(convergence.errors_l2) == pytest.approx(2, 0.2)
-    assert convergence.order(convergence.errors_linf) < 1.9
+    assert convergence.order(convergence.errors_linf) == pytest.approx(2, 0.2)
 
-def test_third_order_convergence_on_uniform_mesh_with_centred():
+def test_second_order_convergence_on_uniform_mesh_with_centred():
     convergence = Convergence(SimulationSpec(flux_divergence=Centred))
 
     for i in range(6):
         convergence.converge()
 
     convergence.dump("results/centred-uniform.dat")
-    assert convergence.order(convergence.errors_l2) == pytest.approx(3, 0.1)
-    assert convergence.order(convergence.errors_linf) == pytest.approx(3, 0.1)
+    assert convergence.order(convergence.errors_l2) == pytest.approx(2, 0.1)
+    assert convergence.order(convergence.errors_linf) == pytest.approx(2, 0.1)
 
 def test_first_order_convergence_on_nonuniform_mesh_with_centred():
     convergence = Convergence(SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence=Centred))
@@ -97,5 +97,5 @@ def test_first_order_convergence_on_nonuniform_mesh_with_centred():
         convergence.converge()
 
     convergence.dump("results/centred-nonuniform.dat")
-    assert convergence.order(convergence.errors_l2) == pytest.approx(2, 0.2)
-    assert convergence.order(convergence.errors_linf) < 1.9
+    assert convergence.order(convergence.errors_l2) == pytest.approx(1, 0.2)
+    assert convergence.order(convergence.errors_linf) == pytest.approx(1, 0.2)
