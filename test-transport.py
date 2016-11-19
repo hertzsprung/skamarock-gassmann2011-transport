@@ -12,7 +12,7 @@ def check_l2_error_below(threshold, mesh_type, flux_divergence):
 def check_convergence(mesh_type, flux_divergence, l2_error, linf_error, dump_file = None):
     convergence = Convergence(SimulationSpec(mesh = Mesh(mesh_type), flux_divergence = flux_divergence))
 
-    for i in range(7):
+    for i in range(8):
         simulation = convergence.converge()
 
     if dump_file:
@@ -62,8 +62,8 @@ def test_second_order_convergence_on_uniform_mesh_with_cubic_fit():
 def test_second_order_convergence_on_nonuniform_mesh_with_cubic_fit():
     check_convergence(Mesh.nonuniform(), CubicFit, l2_error=2, linf_error=2, dump_file="results/cf-nonuniform.dat")
 
-def test_second_order_convergence_on_uniform_mesh_with_corrected_cubic_fit():
-    check_convergence(Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=3, linf_error=3, dump_file="results/cf-corr-uniform.dat")
+def test_fourth_order_convergence_on_uniform_mesh_with_corrected_cubic_fit():
+    check_convergence(Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=4, linf_error=4, dump_file="results/cf-corr-uniform.dat")
 
 def test_second_order_convergence_on_nonuniform_mesh_with_corrected_cubic_fit():
     check_convergence(Mesh.nonuniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=2, linf_error=2, dump_file="results/cf-corr-nonuniform.dat")

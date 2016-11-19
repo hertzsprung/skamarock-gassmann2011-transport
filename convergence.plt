@@ -6,8 +6,8 @@ set format y "10^{%L}"
 
 set xlabel "mean dx"
 
-set xrange [1e-1:1e-3]
-set yrange [1e-9:1]
+set xrange [1e-1:5e-4]
+set yrange [1e-10:1]
 
 set key outside top center
 
