@@ -7,7 +7,6 @@ from timestepping import *
 def check_l2_error_below(threshold, mesh_type, flux_divergence):
     spec = SimulationSpec(mesh = Mesh(mesh_type), flux_divergence = flux_divergence)
     simulation = spec.advect()
-    simulation.dump("results")
     assert simulation.error_l2() < threshold
 
 def check_convergence(mesh_type, flux_divergence, l2_error, linf_error, dump_file = None):
@@ -105,3 +104,9 @@ def test_cubic_fit_coefficients_mid_way_between_third_and_fourth_order():
     third_order_flux_r = np.array(list(itertools.chain([0], third_order._flux_coeffs_right[2])))
     third_order_flux_div = np.array(list(itertools.chain([0], third_order_flux_r - third_order_flux_l)))
     print(third_order_flux_div)
+
+    fourth_order = LeastSquaresDerivative(mesh, polynomial_degree=4, stencil_start=-2, stencil_end=2)
+    fourth_order_flux_l = np.array(list(itertools.chain(fourth_order._flux_coeffs_left[2], [0])))
+    fourth_order_flux_r = np.array(list(itertools.chain([0], fourth_order._flux_coeffs_right[2])))
+    fourth_order_flux_div = fourth_order_flux_r - fourth_order_flux_l
+    print(fourth_order_flux_div)

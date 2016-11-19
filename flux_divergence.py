@@ -119,57 +119,51 @@ class CubicFit:
 # not flux-form, so possibly not conservative?
 # computes dT/dx at cell centre using an upwind-biased four-point stencil
 class LeastSquaresDerivative:
-    def __init__(self, mesh):
+    def __init__(self, mesh, polynomial_degree=3, stencil_start=-2, stencil_end=1):
         self._mesh = mesh
+        self._stencil_start = stencil_start
+        self._stencil_end = stencil_end
         self._advective_coeffs = []
         self._flux_coeffs_left = []
         self._flux_coeffs_right = []
-        self._flux_coeffs_corrected = []
 
         max_flux_coeff_error = 0
 
         for i in range(mesh.C.size):
             origin = self._mesh.C[i]
 
-            downwind_i = (i+1) % mesh.C.size
-            downwind_C = self._mesh.C[downwind_i]
-            if downwind_C < origin:
-                downwind_C += self._mesh.width
+            stencil_C = []
+            for stencil_i in range(stencil_start, stencil_end+1):
+                C = self._mesh.C[(i+stencil_i) % mesh.C.size]
+                if stencil_i > 0 and C < origin:
+                    C += self._mesh.width
+                elif stencil_i < 0 and C > origin:
+                    C -= self._mesh.width
 
-            upwind_i = (i-1) % mesh.C.size
-            upwind_C = self._mesh.C[upwind_i]
-            if upwind_C > origin:
-                upwind_C -= self._mesh.width
+                stencil_C += [C]
 
-            upupwind_i = (i-2) % mesh.C.size
-            upupwind_C = self._mesh.C[upupwind_i]
-            if upupwind_C > origin:
-                upupwind_C -= self._mesh.width
-
-            stencil_C = np.array([upupwind_C, upwind_C, origin, downwind_C]) - origin
+            stencil_C = np.array(stencil_C) - origin
 
             B = []
             for C in stencil_C:
-                B.append([1, C, C**2, C**3])
+                terms = []
+                for exponent in range(polynomial_degree+1):
+                    terms += [C**exponent]
+                B.append(terms)
 
             Binv = la.pinv(B)
             w_advective = Binv[1]
 
-            a = -w_advective[0]
-            c = w_advective[3]
-            b = a - w_advective[1]
-            w_flux = np.multiply(self._mesh.dx[i], [a, b, c])
+            flux_matrix = np.zeros(shape=(len(stencil_C), len(stencil_C)-1))
+            for x in range(len(stencil_C)-1):
+                flux_matrix[x][x] = -1
+                flux_matrix[x+1][x] = 1
 
-            max_flux_coeff_error = max(abs(b - c - w_advective[2]), max_flux_coeff_error)
+            w_flux = np.multiply(self._mesh.dx[i], np.dot(la.pinv(flux_matrix), w_advective))
     
             self._advective_coeffs.append(w_advective)
             self._flux_coeffs_left.append(w_flux)
             self._flux_coeffs_right.append(w_flux)
-
-        assert max_flux_coeff_error < 1e-12
-
-    def _rotate(self, l, n):
-        return l[n:] + l[:n]
 
     def __call__(self, u, T, i):
         T_left = self._approximate(T, i, self._flux_coeffs_left[i])
@@ -182,6 +176,8 @@ class LeastSquaresDerivative:
         upwind_i = (i-1) % T.size
         upupwind_i = (i-2) % T.size
 
-        stencil_T = [T[upupwind_i], T[upwind_i], T[downwind_i]]
+        indices = []
+        for index in range(i+self._stencil_start, i+self._stencil_end):
+            indices += [index % T.size]
 
-        return np.dot(coeffs, stencil_T)
+        return np.dot(coeffs, T[indices])
