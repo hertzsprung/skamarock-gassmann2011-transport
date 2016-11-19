@@ -1,4 +1,5 @@
 import pytest
+import itertools
 from transport import *
 from flux_divergence import *
 from timestepping import *
@@ -74,8 +75,10 @@ def test_skamarock_gassmann_is_conservative():
 def test_cubic_fit_is_conservative():
     check_conservation(CubicFit)
 
-def test_least_squares_is_conservative():
-    check_conservation(LeastSquaresDerivative)
+def test_least_squares_is_nonconservative():
+    spec = SimulationSpec(mesh = Mesh(Mesh.nonuniform()), flux_divergence = LeastSquaresDerivative)
+    simulation = spec.advect()
+    assert simulation.mass_change() > 1e-12
 
 def test_centred_is_conservative():
     check_conservation(Centred)
@@ -88,3 +91,17 @@ def test_nonuniform_mesh_geometry():
 
     assert mesh.dx[0] == pytest.approx(0.8)
     assert mesh.dx[1] == pytest.approx(0.2)
+
+def test_cubic_fit_coefficients_mid_way_between_third_and_fourth_order():
+    mesh = Mesh(Mesh.uniform(nx=5))
+    cubic_fit = CubicFit(mesh)
+    cubic_fit_flux_l = np.array(list(itertools.chain(cubic_fit._Cf_coefficients[3], [0])))
+    cubic_fit_flux_r = np.array(list(itertools.chain([0], cubic_fit._Cf_coefficients[4])))
+    cubic_fit_flux_div = cubic_fit_flux_r - cubic_fit_flux_l
+    print(cubic_fit_flux_div)
+
+    third_order = LeastSquaresDerivative(mesh)
+    third_order_flux_l = np.array(list(itertools.chain(third_order._flux_coeffs_left[2], [0])))
+    third_order_flux_r = np.array(list(itertools.chain([0], third_order._flux_coeffs_right[2])))
+    third_order_flux_div = np.array(list(itertools.chain([0], third_order_flux_r - third_order_flux_l)))
+    print(third_order_flux_div)

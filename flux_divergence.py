@@ -168,11 +168,6 @@ class LeastSquaresDerivative:
 
         assert max_flux_coeff_error < 1e-12
 
-        for l, r in zip(self._rotate(self._flux_coeffs_left, 1), self._flux_coeffs_right):
-            # TODO: can we match adjacent r/l flux coeff pairs and adjust them so that they are equal?
-            self._flux_coeffs_corrected.append(0.5 * (l + r))
-#            print(r, l, 0.5 * (l + r), la.norm(r - l))
-
     def _rotate(self, l, n):
         return l[n:] + l[:n]
 
