@@ -64,7 +64,7 @@ class SkamarockGassmannNonUniformCentring:
         return T[(i+1)%T.size] - 2*T[i] + T[(i-1)%T.size]
 
 class CubicFit:
-    def __init__(self, mesh):
+    def __init__(self, mesh, correction=False):
         self._mesh = mesh
         self._Cf_coefficients = []
 
@@ -94,12 +94,20 @@ class CubicFit:
             stencil_C = (np.array([upupupwind_C, upupwind_C, upwind_C, downwind_C]) - origin)/mesh.mean_dx()
 
             B = []
-            m = [1, 1, 1, 1]
             for i, C in enumerate(stencil_C):
-                B.append(np.multiply(m[i], [1, C, C**2, C**3]))
+                B.append([1, C, C**2, C**3])
 
             Binv = la.pinv(B)
-            self._Cf_coefficients.append(Binv[0]*m[0])
+
+            second_derivative_left = 2*Binv[2] + 6*(upwind_C-origin)*Binv[3]
+            second_derivative_right = 2*Binv[2] + 6*(downwind_C-origin)*Binv[3]
+            corr = 1/48 * (-3 * second_derivative_left + second_derivative_right)
+
+            if correction:
+#                print(Binv[0], corr, Binv[0] + corr)
+                self._Cf_coefficients.append(Binv[0] + corr)
+            else:
+                self._Cf_coefficients.append(Binv[0])
 
     def __call__(self, u, T, i):
         T_left = self._approximate(T, i)

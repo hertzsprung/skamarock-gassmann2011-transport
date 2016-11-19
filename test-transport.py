@@ -12,8 +12,8 @@ def check_l2_error_below(threshold, mesh_type, flux_divergence):
 def check_convergence(mesh_type, flux_divergence, l2_error, linf_error, dump_file = None):
     convergence = Convergence(SimulationSpec(mesh = Mesh(mesh_type), flux_divergence = flux_divergence))
 
-    for i in range(6):
-        convergence.converge()
+    for i in range(7):
+        simulation = convergence.converge()
 
     if dump_file:
         convergence.dump(dump_file)
@@ -62,6 +62,12 @@ def test_second_order_convergence_on_uniform_mesh_with_cubic_fit():
 def test_second_order_convergence_on_nonuniform_mesh_with_cubic_fit():
     check_convergence(Mesh.nonuniform(), CubicFit, l2_error=2, linf_error=2, dump_file="results/cf-nonuniform.dat")
 
+def test_second_order_convergence_on_uniform_mesh_with_corrected_cubic_fit():
+    check_convergence(Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=3, linf_error=3, dump_file="results/cf-corr-uniform.dat")
+
+def test_second_order_convergence_on_nonuniform_mesh_with_corrected_cubic_fit():
+    check_convergence(Mesh.nonuniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=2, linf_error=2, dump_file="results/cf-corr-nonuniform.dat")
+
 def test_second_order_convergence_on_uniform_mesh_with_centred():
     check_convergence(Mesh.uniform(), Centred, l2_error=2, linf_error=2, dump_file="results/centred-uniform.dat")
 
@@ -91,22 +97,3 @@ def test_nonuniform_mesh_geometry():
     assert mesh.dx[0] == pytest.approx(0.8)
     assert mesh.dx[1] == pytest.approx(0.2)
 
-def test_cubic_fit_coefficients_mid_way_between_third_and_fourth_order():
-    mesh = Mesh(Mesh.uniform(nx=5))
-    cubic_fit = CubicFit(mesh)
-    cubic_fit_flux_l = np.array(list(itertools.chain(cubic_fit._Cf_coefficients[3], [0])))
-    cubic_fit_flux_r = np.array(list(itertools.chain([0], cubic_fit._Cf_coefficients[4])))
-    cubic_fit_flux_div = cubic_fit_flux_r - cubic_fit_flux_l
-    print(cubic_fit_flux_div)
-
-    third_order = LeastSquaresDerivative(mesh)
-    third_order_flux_l = np.array(list(itertools.chain(third_order._flux_coeffs_left[2], [0])))
-    third_order_flux_r = np.array(list(itertools.chain([0], third_order._flux_coeffs_right[2])))
-    third_order_flux_div = np.array(list(itertools.chain([0], third_order_flux_r - third_order_flux_l)))
-    print(third_order_flux_div)
-
-    fourth_order = LeastSquaresDerivative(mesh, polynomial_degree=4, stencil_start=-2, stencil_end=2)
-    fourth_order_flux_l = np.array(list(itertools.chain(fourth_order._flux_coeffs_left[2], [0])))
-    fourth_order_flux_r = np.array(list(itertools.chain([0], fourth_order._flux_coeffs_right[2])))
-    fourth_order_flux_div = fourth_order_flux_r - fourth_order_flux_l
-    print(fourth_order_flux_div)

@@ -61,6 +61,7 @@ class SimulationSpec:
         self._initial = initial
         self.mesh = mesh
         self._dt = dt
+        self._flux_divergence_function = flux_divergence
         self._flux_divergence = flux_divergence(mesh)
         self._timestepping = timestepping(self._flux_divergence)
 
@@ -79,7 +80,7 @@ class SimulationSpec:
         return simulation
 
     def refine(self):
-        return SimulationSpec(self._initial, self._dt/2, self._end_time, self.mesh.refine(), self._flux_divergence.__class__, self._timestepping.__class__)
+        return SimulationSpec(self._initial, self._dt/2, self._end_time, self.mesh.refine(), self._flux_divergence_function, self._timestepping.__class__)
 
     def max_courant(self):
         return self._u * self._dt / np.min(self.mesh.dx)
