@@ -104,7 +104,7 @@ class CubicFit:
             corr = 1/48 * (-3 * second_derivative_left + second_derivative_right)
 
             if correction:
-#                print(Binv[0], corr, Binv[0] + corr)
+                print(Binv[0], corr, Binv[0] + corr)
                 self._Cf_coefficients.append(Binv[0] + corr)
             else:
                 self._Cf_coefficients.append(Binv[0])
@@ -124,7 +124,15 @@ class CubicFit:
 
         return np.dot(self._Cf_coefficients[i % T.size], stencil_T)
 
-# not flux-form, so possibly not conservative?
+def split_advective_coefficients(w_advective):
+    flux_matrix = np.zeros(shape=(len(w_advective), len(w_advective)-1))
+    for x in range(len(w_advective)-1):
+        flux_matrix[x][x] = -1
+        flux_matrix[x+1][x] = 1
+
+    return np.dot(la.pinv(flux_matrix), w_advective)
+
+# not flux-form, so not conservative
 # computes dT/dx at cell centre using an upwind-biased four-point stencil
 class LeastSquaresDerivative:
     def __init__(self, mesh, polynomial_degree=3, stencil_start=-2, stencil_end=1):
@@ -161,13 +169,7 @@ class LeastSquaresDerivative:
 
             Binv = la.pinv(B)
             w_advective = Binv[1]
-
-            flux_matrix = np.zeros(shape=(len(stencil_C), len(stencil_C)-1))
-            for x in range(len(stencil_C)-1):
-                flux_matrix[x][x] = -1
-                flux_matrix[x+1][x] = 1
-
-            w_flux = np.multiply(self._mesh.dx[i], np.dot(la.pinv(flux_matrix), w_advective))
+            w_flux = np.multiply(self._mesh.dx[i], split_advective_coefficients(w_advective))
     
             self._advective_coeffs.append(w_advective)
             self._flux_coeffs_left.append(w_flux)

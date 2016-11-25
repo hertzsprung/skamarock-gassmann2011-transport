@@ -4,6 +4,8 @@ from transport import *
 from flux_divergence import *
 from timestepping import *
 
+np.set_printoptions(precision=15, linewidth=120, suppress=True)
+
 def check_l2_error_below(threshold, mesh_type, flux_divergence):
     spec = SimulationSpec(mesh = Mesh(mesh_type), flux_divergence = flux_divergence)
     simulation = spec.advect()
@@ -37,6 +39,9 @@ def test_sine_wave_advection_with_skamarock_gassmann_nonuniform_centring():
 
 def test_sine_wave_advection_with_cubic_fit():
     check_l2_error_below(0.2, Mesh.nonuniform(), CubicFit)
+
+def test_sine_wave_advection_with_corrected_cubic_fit():
+    check_l2_error_below(0.2, Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True))
 
 def test_third_order_convergence_on_uniform_mesh_with_skamarock_gassmann():
     check_convergence(Mesh.uniform(), SkamarockGassmann, l2_error=3, linf_error=3, dump_file="results/sk-uniform.dat")
