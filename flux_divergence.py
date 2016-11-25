@@ -99,12 +99,13 @@ class CubicFit:
 
             Binv = la.pinv(B)
 
+#            second_derivative_left = np.array([1, -2, 1, 0])
+#            second_derivative_right = np.array([0, 1, -2, 1])
             second_derivative_left = 2*Binv[2] + 6*(upwind_C-origin)*Binv[3]
             second_derivative_right = 2*Binv[2] + 6*(downwind_C-origin)*Binv[3]
             corr = 1/48 * (-3 * second_derivative_left + second_derivative_right)
 
             if correction:
-                print(Binv[0], corr, Binv[0] + corr)
                 self._Cf_coefficients.append(Binv[0] + corr)
             else:
                 self._Cf_coefficients.append(Binv[0])
