@@ -58,8 +58,12 @@ def test_less_than_second_order_convergence_on_nonuniform_mesh_with_skamarock_ga
 def test_third_order_convergence_on_uniform_mesh_with_least_squares():
     check_convergence(Mesh.uniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="results/ls-uniform.dat")
 
-def test_third_order_convergence_on_nonuniform_mesh_with_least_squares():
+def test_third_order_convergence_on_nonuniform_mesh_with_least_squares_four_point():
     check_convergence(Mesh.nonuniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="results/ls-nonuniform.dat")
+
+def test_fourth_order_convergence_on_uniform_mesh_with_least_squares_five_point():
+    flux_divergence = lambda mesh: LeastSquaresDerivative(mesh, polynomial_degree=4, stencil_start=-2, stencil_end=2)
+    check_convergence(Mesh.uniform(), flux_divergence, l2_error=4, linf_error=4, dump_file="results/ls4-uniform.dat")
 
 def test_second_order_convergence_on_uniform_mesh_with_cubic_fit():
     check_convergence(Mesh.uniform(), CubicFit, l2_error=2, linf_error=2, dump_file="results/cf-uniform.dat")
