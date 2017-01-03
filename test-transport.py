@@ -44,44 +44,44 @@ def test_sine_wave_advection_with_corrected_cubic_fit():
     check_l2_error_below(0.2, Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True))
 
 def test_third_order_convergence_on_uniform_mesh_with_skamarock_gassmann():
-    check_convergence(Mesh.uniform(), SkamarockGassmann, l2_error=3, linf_error=3, dump_file="results/sk-uniform.dat")
+    check_convergence(Mesh.uniform(), SkamarockGassmann, l2_error=3, linf_error=3, dump_file="build/sk-uniform.dat")
 
 def test_less_than_second_order_convergence_on_nonuniform_mesh_with_skamarock_gassmann():
-    check_convergence(Mesh.nonuniform(), SkamarockGassmann, l2_error=2, linf_error=1.5, dump_file="results/sk-nonuniform.dat")
+    check_convergence(Mesh.nonuniform(), SkamarockGassmann, l2_error=2, linf_error=1.5, dump_file="build/sk-nonuniform.dat")
 
 def test_third_order_convergence_on_uniform_mesh_with_skamarock_gassmann_nonuniform_centring():
-    check_convergence(Mesh.uniform(), SkamarockGassmannNonUniformCentring, l2_error=3, linf_error=3, dump_file="results/sknuc-uniform.dat")
+    check_convergence(Mesh.uniform(), SkamarockGassmannNonUniformCentring, l2_error=3, linf_error=3, dump_file="build/sknuc-uniform.dat")
 
 def test_less_than_second_order_convergence_on_nonuniform_mesh_with_skamarock_gassmann_nonuniform_centring():
-    check_convergence(Mesh.nonuniform(), SkamarockGassmannNonUniformCentring, l2_error=2, linf_error=1.5, dump_file="results/sknuc-nonuniform.dat")
+    check_convergence(Mesh.nonuniform(), SkamarockGassmannNonUniformCentring, l2_error=2, linf_error=1.5, dump_file="build/sknuc-nonuniform.dat")
 
 def test_third_order_convergence_on_uniform_mesh_with_least_squares():
-    check_convergence(Mesh.uniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="results/ls-uniform.dat")
+    check_convergence(Mesh.uniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="build/ls-uniform.dat")
 
 def test_third_order_convergence_on_nonuniform_mesh_with_least_squares_four_point():
-    check_convergence(Mesh.nonuniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="results/ls-nonuniform.dat")
+    check_convergence(Mesh.nonuniform(), LeastSquaresDerivative, l2_error=3, linf_error=3, dump_file="build/ls-nonuniform.dat")
 
 def test_fourth_order_convergence_on_uniform_mesh_with_least_squares_five_point():
     flux_divergence = lambda mesh: LeastSquaresDerivative(mesh, polynomial_degree=4, stencil_start=-2, stencil_end=2)
-    check_convergence(Mesh.uniform(), flux_divergence, l2_error=4, linf_error=4, dump_file="results/ls4-uniform.dat")
+    check_convergence(Mesh.uniform(), flux_divergence, l2_error=4, linf_error=4, dump_file="build/ls4-uniform.dat")
 
 def test_second_order_convergence_on_uniform_mesh_with_cubic_fit():
-    check_convergence(Mesh.uniform(), CubicFit, l2_error=2, linf_error=2, dump_file="results/cf-uniform.dat")
+    check_convergence(Mesh.uniform(), CubicFit, l2_error=2, linf_error=2, dump_file="build/cf-uniform.dat")
 
 def test_second_order_convergence_on_nonuniform_mesh_with_cubic_fit():
-    check_convergence(Mesh.nonuniform(), CubicFit, l2_error=2, linf_error=2, dump_file="results/cf-nonuniform.dat")
+    check_convergence(Mesh.nonuniform(), CubicFit, l2_error=2, linf_error=2, dump_file="build/cf-nonuniform.dat")
 
 def test_fourth_order_convergence_on_uniform_mesh_with_corrected_cubic_fit():
-    check_convergence(Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=4, linf_error=4, dump_file="results/cf-corr-uniform.dat")
+    check_convergence(Mesh.uniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=4, linf_error=4, dump_file="build/cf-corr-uniform.dat")
 
 def test_second_order_convergence_on_nonuniform_mesh_with_corrected_cubic_fit():
-    check_convergence(Mesh.nonuniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=2, linf_error=2, dump_file="results/cf-corr-nonuniform.dat")
+    check_convergence(Mesh.nonuniform(), lambda mesh: CubicFit(mesh, correction=True), l2_error=2, linf_error=2, dump_file="build/cf-corr-nonuniform.dat")
 
 def test_second_order_convergence_on_uniform_mesh_with_centred():
-    check_convergence(Mesh.uniform(), Centred, l2_error=2, linf_error=2, dump_file="results/centred-uniform.dat")
+    check_convergence(Mesh.uniform(), Centred, l2_error=2, linf_error=2, dump_file="build/centred-uniform.dat")
 
 def test_second_order_convergence_on_nonuniform_mesh_with_centred():
-    check_convergence(Mesh.nonuniform(), Centred, l2_error=2, linf_error=2, dump_file="results/centred-nonuniform.dat")
+    check_convergence(Mesh.nonuniform(), Centred, l2_error=2, linf_error=2, dump_file="build/centred-nonuniform.dat")
 
 def test_skamarock_gassmann_is_conservative():
     check_conservation(SkamarockGassmann)
