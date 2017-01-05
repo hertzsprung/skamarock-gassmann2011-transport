@@ -1,4 +1,4 @@
-set terminal svg size 800,600 fname 'Verdana' fsize 14
+set terminal svg size 640,480 fname 'Verdana'
 set output 'build/convergence.svg'
 set style data linespoints
 

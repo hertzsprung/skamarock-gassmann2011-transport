@@ -6,12 +6,12 @@ MAKEFLAGS += --no-builtin-rules
 
 SOURCES := test-transport.py transport.py flux_divergence.py timestepping.py
 
-all:: build/convergence.pdf
+all:: build/convergence.svg
 
 clean::
 	rm -rf build
 
-build/convergence.pdf: \
+build/convergence.svg: \
   convergence.plt \
   build/cf-uniform.dat \
   build/cf-nonuniform.dat \
